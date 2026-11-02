@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <title>한글 Copilot</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="app-header"><div class="brand">한글<span>Copilot</span></div><span id="connection">연결 전</span><button id="openSettings" class="subtle" type="button" aria-haspopup="dialog">설정 ⚙</button></header>
+  <main id="conversation" class="conversation" role="log" aria-label="대화 기록" aria-live="polite" aria-relevant="additions">
+    <article class="message assistant welcome"><div class="message-label">Copilot</div><div class="message-body"><p>보고서 작성, 문장 다듬기, 궁금한 점을 편하게 이야기해 주세요.</p><p>설정에서 AI를 연결하면 대화를 시작할 수 있어요. 한글에 글을 넣으려면 문서도 연결해 주세요.</p></div></article>
+    <section id="latestDraft" class="draft-card" hidden>
+      <label for="draft" class="sr-only">답변 편집</label><textarea id="draft" rows="6" placeholder="답변을 검토하고 고칠 수 있습니다."></textarea>
+      <div class="draft-footer"><span id="draftCount">0자</span><button id="apply" class="secondary" type="button" disabled>문서에 적용</button></div>
+      <p id="applyHint" class="hint">적용할 문서는 설정에서 읽으세요. 적용 후 파일 저장은 별도입니다.</p>
+    </section>
+  </main>
+  <footer id="composer" class="composer">
+  <section id="usagePanel" class="usage-panel" aria-label="API 사용량">
+    <div class="usage-heading"><strong>API 사용량</strong><span id="usageValue">한도 미제공</span></div>
+    <div id="usageBar" class="usage-track unknown" role="progressbar" aria-label="API 한도 정보 없음"><div id="usageFill" class="usage-fill"></div></div>
+    <p id="usageDetail">응답 토큰 누적 0 · API가 한도를 알려주면 사용률을 표시합니다.</p>
+  </section>
+
+    <button id="contextButton" class="context-button" type="button">문서 내용 보내지 않음 · 글 추가</button>
+    <label for="instruction" class="sr-only">질문 입력</label>
+    <div class="composer-input"><textarea id="instruction" rows="3" placeholder="보고서에 대해 무엇이든 물어보세요."></textarea><button id="generate" class="primary" type="button" disabled aria-label="질문 전송">전송 ↑</button></div>
+    <p class="composer-hint">Enter 전송 · Shift+Enter 줄바꿈 · 최근 대화와 선택한 문맥이 API에 전송됩니다.</p>
+    <div id="status" role="status" aria-live="polite">설정에서 AI를 연결하고 모델을 선택하세요.</div>
+  </footer>
+  <dialog id="settingsDialog" aria-labelledby="settingsTitle">
+    <div class="settings-header"><h2 id="settingsTitle">설정</h2><button id="closeSettings" class="subtle" type="button" aria-label="설정 닫기">닫기 ✕</button></div>
+    <div class="settings-body">
+      <nav id="desktopControls" hidden aria-label="패널 배치">
+    <button id="dock" class="subtle" aria-pressed="true">창에 붙이기 켜짐</button>
+    <button id="layout" class="subtle">나란히 배치</button>
+    <button id="focusHwp" class="subtle">한글로 이동</button>
+  </nav>
+      <section class="card document-card">
+      <div class="section-title"><span class="number">01</span><h2>작업할 문서</h2></div>
+      <label for="hwpVersion">한글 연결</label><select id="hwpVersion"><option value="HWPFrame.HwpObject">기본 한글 자동 연결</option></select>
+      <button id="openDocument" class="primary wide" type="button">기존 파일 선택해서 연결</button>
+      <button id="connect" class="secondary wide" type="button">한글 창만 연결 / 새 문서 작업</button>
+      <p class="hint">파일 선택 창에서 작업할 보고서를 고르면 바로 연결하고 읽습니다. 다른 파일로 바꿀 때도 파일 선택 버튼을 누르세요. 커서나 선택 영역을 바꾼 뒤에는 문서를 다시 읽으세요.</p>
+      <div class="row"><button id="read" class="primary" type="button" disabled>문서 읽기</button><button id="save" class="subtle" type="button" disabled>파일 저장</button></div>
+      <p id="documentInfo" class="document-info">문서를 읽으면 내용과 선택 영역을 확인할 수 있습니다.</p>
+      <details class="compatibility"><summary>버전 및 연결 점검</summary><p id="diagnostics" class="hint">연결 점검을 누르면 설치 정보를 확인합니다.</p><button id="checkConnection" class="subtle" type="button">연결 점검</button></details>
+    </section>
+    
+      <details id="aiSettings" class="card settings-card" open>
+      <summary><strong>AI 연결 설정</strong><span id="activeModel">모델 선택</span></summary>
+      <label for="profile">저장한 연결 설정</label><div class="row"><select id="profile"><option value="">새 연결 설정</option></select><button id="removeProfile" class="subtle" type="button">삭제</button></div>
+      <label for="provider">API 형식</label><select id="provider"></select>
+      <label for="baseUrl">API 기본 URL</label><input id="baseUrl" type="url" spellcheck="false" autocomplete="off">
+      <label for="model">모델 선택</label><div class="row"><select id="model" disabled><option value="">API 키를 입력하고 목록을 불러오세요</option></select><button id="loadModels" class="secondary" type="button" disabled>목록 불러오기</button></div>
+      <label for="apiKey">API 키 <small>현재 실행 중에만 사용</small></label><input id="apiKey" type="password" placeholder="API 키 (로컬 AI는 생략 가능)" autocomplete="off">
+      <div class="row profile-save"><input id="profileName" aria-label="연결 설정 이름" placeholder="설정 이름"><button id="saveProfile" class="secondary" type="button">설정 저장</button></div>
+      <p class="hint">모델과 주소만 이 PC에 저장합니다. API 키는 저장하거나 팀원에게 공유하지 않습니다.</p>
+    </details>
+    
+      <section class="card"><h2>문서 문맥과 적용 방식</h2><label for="mode">적용 방식</label><select id="mode"><option value="insert">커서 위치에 글 추가</option><option value="replace">선택한 문장 교체</option></select>
+      <label for="scope">AI에 보낼 문맥</label><select id="scope"><option value="none">문서 내용 보내지 않음</option><option value="selection">선택 영역만</option><option value="document">문서 전체</option></select>
+      <details class="context-details"><summary>전송할 문맥 확인 <span id="contextCount">0자</span></summary><textarea id="context" readonly rows="4" aria-label="AI에 전송할 문맥" placeholder="선택한 범위의 문서 내용"></textarea></details>
+      <p class="hint">일반 질문은 문서 없이도 가능합니다. 문서 내용은 선택한 범위만 보내고, 최근 대화는 함께 전송합니다.</p><div class="chips"><button type="button" data-prompt="선택한 문장을 공문서에 맞는 간결하고 명확한 표현으로 다듬어 줘.">문장 다듬기</button><button type="button" data-prompt="문서의 핵심 내용을 다섯 항목으로 요약해 줘.">핵심 요약</button><button type="button" data-prompt="문서 내용을 바탕으로 보고서의 결론과 향후 계획을 작성해 줘.">결론 작성</button></div></section>
+      <section class="card"><h2>대화 관리</h2><button id="newChat" class="subtle wide" type="button">새 대화 시작</button><p class="hint">대화는 현재 실행 중에만 유지됩니다. 새 대화를 시작해도 응답 토큰 누적은 유지됩니다. 최근 최대 10번의 대화를 문맥으로 사용합니다.</p></section>
+      <p id="panelHint" class="hint">한글과 함께 쓰는 AI 보고서 도우미</p>
+    </div>
+  </dialog>
+</body>
+</html>

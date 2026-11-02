@@ -1,0 +1,63 @@
+{
+  "name": "hwp-copilot",
+  "version": "0.3.1",
+  "description": "한글 창 옆에서 사용하는 AI 보고서 작성 도우미",
+  "author": "HWP Copilot contributors",
+  "main": "src/desktop/main.js",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/desktop/launch.cjs",
+    "start:web": "node src/hwpcopilot.js",
+    "test": "node --test test/*.test.js",
+    "test:desktop": "node src/desktop/launch.cjs --smoke-test",
+    "dist": "electron-builder --win portable --x64",
+    "dist:installer": "electron-builder --win nsis --x64"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "devDependencies": {
+    "electron": "45.2.1",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "local.hwpcopilot.desktop",
+    "productName": "HWP Copilot",
+    "directories": {
+      "output": "bin"
+    },
+    "files": [
+      "src/desktop/**",
+      "src/public/**",
+      "src/bridge.js",
+      "src/document-service.js",
+      "src/providers.js",
+      "src/usage.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "src/native",
+        "to": "native"
+      }
+    ],
+    "win": {
+      "icon": "src/public/app.ico",
+      "target": [
+        "portable"
+      ],
+      "signExecutable": false
+    },
+    "portable": {
+      "artifactName": "HWP-Copilot-${version}-${arch}.exe"
+    },
+    "nsis": {
+      "artifactName": "HWP-Copilot-Setup-${version}-${arch}.exe",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false
+    },
+    "publish": null
+  }
+}
